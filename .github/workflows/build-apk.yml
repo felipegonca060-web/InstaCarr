@@ -20,14 +20,37 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Encontrar Gradle
+        run: |
+          echo "Procurando gradlew..."
+          find . -name gradlew -type f
+
       - name: Dar permissão ao Gradle
-        run: chmod +x ./gradlew
+        run: |
+          GRADLEW=$(find . -name gradlew -type f | head -n 1)
+
+          if [ -z "$GRADLEW" ]; then
+            echo "ERRO: arquivo gradlew não encontrado!"
+            exit 1
+          fi
+
+          echo "Gradle encontrado em: $GRADLEW"
+          chmod +x "$GRADLEW"
 
       - name: Gerar APK
-        run: ./gradlew assembleDebug
+        run: |
+          GRADLEW=$(find . -name gradlew -type f | head -n 1)
+
+          if [ -z "$GRADLEW" ]; then
+            echo "ERRO: arquivo gradlew não encontrado!"
+            exit 1
+          fi
+
+          cd "$(dirname "$GRADLEW")"
+          ./gradlew assembleDebug
 
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
           name: InstaCar-APK
-          path: app/build/outputs/apk/**/*.apk
+          path: '**/build
