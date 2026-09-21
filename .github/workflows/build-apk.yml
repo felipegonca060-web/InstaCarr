@@ -20,34 +20,28 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Encontrar Gradle
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Encontrar projeto Gradle
         run: |
-          echo "Procurando gradlew..."
-          find . -name gradlew -type f
-
-      - name: Dar permissão ao Gradle
-        run: |
-          GRADLEW=$(find . -name gradlew -type f | head -n 1)
-
-          if [ -z "$GRADLEW" ]; then
-            echo "ERRO: arquivo gradlew não encontrado!"
-            exit 1
-          fi
-
-          echo "Gradle encontrado em: $GRADLEW"
-          chmod +x "$GRADLEW"
+          echo "Procurando arquivos Gradle..."
+          find . -maxdepth 4 \( -name "build.gradle" -o -name "build.gradle.kts" \) -print
 
       - name: Gerar APK
         run: |
-          GRADLEW=$(find . -name gradlew -type f | head -n 1)
+          GRADLE_FILE=$(find . -maxdepth 4 \( -name "build.gradle" -o -name "build.gradle.kts" \) -type f | head -n 1)
 
-          if [ -z "$GRADLEW" ]; then
-            echo "ERRO: arquivo gradlew não encontrado!"
+          if [ -z "$GRADLE_FILE" ]; then
+            echo "ERRO: nenhum build.gradle ou build.gradle.kts encontrado!"
             exit 1
           fi
 
-          cd "$(dirname "$GRADLEW")"
-          ./gradlew assembleDebug
+          PROJECT_DIR=$(dirname "$GRADLE_FILE")
+          echo "Projeto encontrado em: $PROJECT_DIR"
+
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
 
       - name: Salvar APK
         uses: actions/upload-artifact@v4
